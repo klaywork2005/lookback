@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import LandingPage from './assets/frontend components/landingpage'
 
 const App = () => {

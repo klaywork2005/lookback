@@ -1,13 +1,19 @@
 spring:
+  application:
+    name: backend
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/lookback
-    username: lookback
+    url: jdbc:postgresql://localhost:54948/postgres
+    username: postgres
     password: ${POSTGRES_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
+
   flyway:
     enabled: true
-
+    
 tmdb:
   access-token: ${TMDB_ACCESS_TOKEN}
