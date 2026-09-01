@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: lookback
+      POSTGRES_USER: lookback
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - lookback_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lookback -d lookback"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  lookback_postgres_data:
