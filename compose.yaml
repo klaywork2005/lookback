@@ -1,3 +1,4 @@
+# Runs the local PostgreSQL service.
 services:
   postgres:
     image: postgres:17

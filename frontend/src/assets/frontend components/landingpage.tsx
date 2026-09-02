@@ -2,10 +2,10 @@ import LookBackLogo from '../../app_images/LookBack.svg'
 
 const LandingPage = () => {
     return (
-        /* Base page wrapper: 100% width on mobile, centers content on larger screens */
+        /* Contains the landing page. */
         <div className="bg-neutral-100 min-h-screen flex flex-col items-center w-full">
             
-            {/* Header: full width on mobile (0 margins), 76vw on large screens */}
+            {/* Contains the logo, links, and search field. */}
             <header className="sticky top-0 z-50 flex items-center bg-neutral-100 w-full lg:w-[76vw] min-h-11 border-b lg:border-x border-mist-400 px-4 py-4 justify-left">
                 <img
                     src={LookBackLogo}
@@ -19,7 +19,7 @@ const LandingPage = () => {
                         rel="noopener noreferrer"
                         className="hover:text-mist-600 hover:underline"
                     >
-                        {/* Header links will wrap smoothly if space gets tight */}
+                        {/* Opens the source repository. */}
                         Repository
                     </a>
                     <a
@@ -28,19 +28,19 @@ const LandingPage = () => {
                         rel="noopener noreferrer"
                         className="hover:text-mist-600 hover:underline"
                     >
-                        {/* Header links will wrap smoothly if space gets tight */}
+                        {/* Opens the TMDB documentation. */}
                         TMDB API
                     </a>
                 </div>
                 <div className="relative ml-auto w-48 shrink-0">
-                    {/* Search Icon */}
+                    {/* Displays the search icon. */}
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-500">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
 
-                    {/* Input Field */}
+                    {/* Accepts a movie title. */}
                     <input
                         type="search"
                         placeholder="Search Movies..."
@@ -49,7 +49,7 @@ const LandingPage = () => {
                 </div>
             </header>
 
-            {/* Main Content: full width on mobile (0 margins), 76vw on large screens */}
+            {/* Contains the graph view. */}
             <main className="w-full lg:w-[76vw] min-h-screen lg:border-x border-mist-400 p-4 flex-1 break-words">
                 hello world
             </main>
