@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "api",
+    "base.apps.BaseConfig",
 ]
 
 MIDDLEWARE = [
@@ -40,7 +41,9 @@ ROOT_URLCONF = "lookback.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / 'templates'
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -58,7 +61,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB", "lookback"),
-        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "USER": os.getenv("POSTGRES_USER", "lookback"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.environ["POSTGRES_PASSWORD"]),
         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
