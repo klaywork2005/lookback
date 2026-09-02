@@ -1,6 +1,6 @@
 .env
-backend/.venv/
-backend/db.sqlite3
+.venv/
+db.sqlite3
 **/__pycache__/
 *.py[cod]
 frontend/node_modules/

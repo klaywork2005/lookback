@@ -13,9 +13,12 @@ Docker provides the local PostgreSQL service.
 ## Structure
 
 ```text
-frontend        React application
-backend         Django project
-compose.yaml    PostgreSQL service
+api                 Django application
+frontend            React application
+lookback            Django project configuration
+manage.py           Django command entry point
+requirements.txt    Python dependencies
+compose.yaml        PostgreSQL service
 ```
 
 ## Database
@@ -32,12 +35,10 @@ docker compose up postgres
 
 ## Server
 
-Install Django, psycopg, and python dotenv.
-
-Run these commands from `backend`.
+Run these commands from the repository root.
 
 ```text
-pip install Django==6.1 "psycopg[binary]" python-dotenv
+pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```

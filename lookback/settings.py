@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR.parent / ".env")
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-development-only")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
@@ -58,8 +58,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB", "lookback"),
-        "USER": os.getenv("POSTGRES_USER", "lookback"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.environ["POSTGRES_PASSWORD"]),
         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
