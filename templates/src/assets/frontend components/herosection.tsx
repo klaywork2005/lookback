@@ -6,7 +6,7 @@ const HeroSection = () => {
     // Returns the hero section.
     return (
         // Holds the hero content.
-        <section className="grid w-full gap-12 border-b border-mist-400 px-6 py-16 lg:min-h-[36rem] lg:grid-cols-2 lg:px-16 lg:py-28">
+        <section className="grid w-full gap-12 border-mist-400 px-6 py-16 lg:min-h-[36rem] lg:grid-cols-2 lg:px-16 lg:py-24 lg:pb-8 lg:mb-38">
             {/* Holds the hero text. */}
             <div className="flex flex-col items-start justify-center">
                 {/* Displays the main heading. */}

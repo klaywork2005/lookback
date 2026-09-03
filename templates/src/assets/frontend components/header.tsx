@@ -6,7 +6,7 @@ const Header = () => {
     // Returns the header.
     return (
         // Holds the header content.
-        <header className="sticky top-0 z-50 flex min-h-11 w-full items-center justify-left border-b border-mist-400 bg-neutral-100 px-4 py-4 lg:w-[76vw] lg:border-x">
+        <header className=" sticky top-0 z-50 flex min-h-11 w-full items-center justify-left border-b border-mist-400 bg-neutral-100 px-4 py-4 lg:w-[76vw] lg:border-x">
             {/* Displays the logo. */}
             <img src={LookBackLogo} alt="LookBack" className="h-auto w-48 max-w-[65%] bg-neutral-100 sm:w-64" />
 

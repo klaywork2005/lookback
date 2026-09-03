@@ -318,13 +318,6 @@ const MoviePickerSection = () => {
 
                 {/* Holds the category buttons. */}
                 <div className="mt-8 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-5">
-                    {/* Renders the Award Season Royalty button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Award Season Royalty')} onClick={() => toggleCategory('Award Season Royalty')} className={selectionButtonClassName(selectedCategories.has('Award Season Royalty'))}>
-                        {/* Displays the Award Season Royalty label. */}
-                        Award Season Royalty
-                    {/* Ends the Award Season Royalty button. */}
-                    </button>
-
                     {/* Renders the Blockbuster Duds button. */}
                     <button type="button" aria-pressed={selectedCategories.has('Blockbuster Duds')} onClick={() => toggleCategory('Blockbuster Duds')} className={selectionButtonClassName(selectedCategories.has('Blockbuster Duds'))}>
                         {/* Displays the Blockbuster Duds label. */}
@@ -346,11 +339,18 @@ const MoviePickerSection = () => {
                     {/* Ends the Certified Classics button. */}
                     </button>
 
-                    {/* Renders the Cult Obsessions button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Cult Obsessions')} onClick={() => toggleCategory('Cult Obsessions')} className={selectionButtonClassName(selectedCategories.has('Cult Obsessions'))}>
-                        {/* Displays the Cult Obsessions label. */}
-                        Cult Obsessions
-                    {/* Ends the Cult Obsessions button. */}
+                    {/* Renders the Crowd Favorites button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('Crowd Favorites')} onClick={() => toggleCategory('Crowd Favorites')} className={selectionButtonClassName(selectedCategories.has('Crowd Favorites'))}>
+                        {/* Displays the Crowd Favorites label. */}
+                        Crowd Favorites
+                    {/* Ends the Crowd Favorites button. */}
+                    </button>
+
+                    {/* Renders the Epic Runtime button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('Epic Runtime')} onClick={() => toggleCategory('Epic Runtime')} className={selectionButtonClassName(selectedCategories.has('Epic Runtime'))}>
+                        {/* Displays the Epic Runtime label. */}
+                        Epic Runtime
+                    {/* Ends the Epic Runtime button. */}
                     </button>
 
                     {/* Renders the Hidden Gems button. */}
@@ -360,25 +360,25 @@ const MoviePickerSection = () => {
                     {/* Ends the Hidden Gems button. */}
                     </button>
 
-                    {/* Renders the Midnight Madness button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Midnight Madness')} onClick={() => toggleCategory('Midnight Madness')} className={selectionButtonClassName(selectedCategories.has('Midnight Madness'))}>
-                        {/* Displays the Midnight Madness label. */}
-                        Midnight Madness
-                    {/* Ends the Midnight Madness button. */}
+                    {/* Renders the International Picks button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('International Picks')} onClick={() => toggleCategory('International Picks')} className={selectionButtonClassName(selectedCategories.has('International Picks'))}>
+                        {/* Displays the International Picks label. */}
+                        International Picks
+                    {/* Ends the International Picks button. */}
                     </button>
 
-                    {/* Renders the One Hit Wonders button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('One Hit Wonders')} onClick={() => toggleCategory('One Hit Wonders')} className={selectionButtonClassName(selectedCategories.has('One Hit Wonders'))}>
-                        {/* Displays the One Hit Wonders label. */}
-                        One Hit Wonders
-                    {/* Ends the One Hit Wonders button. */}
+                    {/* Renders the New Releases button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('New Releases')} onClick={() => toggleCategory('New Releases')} className={selectionButtonClassName(selectedCategories.has('New Releases'))}>
+                        {/* Displays the New Releases label. */}
+                        New Releases
+                    {/* Ends the New Releases button. */}
                     </button>
 
-                    {/* Renders the Sleeper Hits button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Sleeper Hits')} onClick={() => toggleCategory('Sleeper Hits')} className={selectionButtonClassName(selectedCategories.has('Sleeper Hits'))}>
-                        {/* Displays the Sleeper Hits label. */}
-                        Sleeper Hits
-                    {/* Ends the Sleeper Hits button. */}
+                    {/* Renders the Short and Sweet button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('Short and Sweet')} onClick={() => toggleCategory('Short and Sweet')} className={selectionButtonClassName(selectedCategories.has('Short and Sweet'))}>
+                        {/* Displays the Short and Sweet label. */}
+                        Short and Sweet
+                    {/* Ends the Short and Sweet button. */}
                     </button>
 
                     {/* Renders the Small Budget Standouts button. */}
@@ -388,18 +388,18 @@ const MoviePickerSection = () => {
                     {/* Ends the Small Budget Standouts button. */}
                     </button>
 
-                    {/* Renders the Visual Feasts button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Visual Feasts')} onClick={() => toggleCategory('Visual Feasts')} className={selectionButtonClassName(selectedCategories.has('Visual Feasts'))}>
-                        {/* Displays the Visual Feasts label. */}
-                        Visual Feasts
-                    {/* Ends the Visual Feasts button. */}
+                    {/* Renders the Surprise Hits button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('Surprise Hits')} onClick={() => toggleCategory('Surprise Hits')} className={selectionButtonClassName(selectedCategories.has('Surprise Hits'))}>
+                        {/* Displays the Surprise Hits label. */}
+                        Surprise Hits
+                    {/* Ends the Surprise Hits button. */}
                     </button>
 
-                    {/* Renders the Wild Cards button. */}
-                    <button type="button" aria-pressed={selectedCategories.has('Wild Cards')} onClick={() => toggleCategory('Wild Cards')} className={selectionButtonClassName(selectedCategories.has('Wild Cards'))}>
-                        {/* Displays the Wild Cards label. */}
-                        Wild Cards
-                    {/* Ends the Wild Cards button. */}
+                    {/* Renders the Trending Now button. */}
+                    <button type="button" aria-pressed={selectedCategories.has('Trending Now')} onClick={() => toggleCategory('Trending Now')} className={selectionButtonClassName(selectedCategories.has('Trending Now'))}>
+                        {/* Displays the Trending Now label. */}
+                        Trending Now
+                    {/* Ends the Trending Now button. */}
                     </button>
                 {/* Ends the category buttons. */}
                 </div>
@@ -496,11 +496,11 @@ const MoviePickerSection = () => {
                         </p>
 
                         {/* Holds the applied filters. */}
-                        <div className="mt-6 rounded-lg border border-mist-300 bg-neutral-100 p-4 text-sm text-mist-700">
+                        <div className="mt-6 rounded-lg border border-mist-300 bg-neutral-100 p-4 text-mist-700">
                             {/* Displays the selected genres. */}
-                            <p><span className="font-semibold">Genres:</span> {genreSummary}</p>
+                            <p><span className="font-semibold">Applied Genres:</span> {genreSummary}</p>
                             {/* Displays the selected categories. */}
-                            <p className="mt-2"><span className="font-semibold">Categories:</span> {categorySummary}</p>
+                            <p className="mt-2"><span className="font-semibold">Applied Categories:</span> {categorySummary}</p>
                         {/* Ends the applied filters. */}
                         </div>
                     {/* Ends the movie information. */}
@@ -555,7 +555,7 @@ const MoviePickerSection = () => {
     // Returns the movie picker.
     return (
         // Holds the movie picker.
-        <section id="movie-picker" aria-labelledby="movie-picker-title" className="w-full min-w-0 scroll-mt-24 px-4 py-16 sm:px-6 lg:min-h-[36rem] lg:px-16 lg:py-10">
+        <section id="movie-picker" aria-labelledby="movie-picker-title" className="border-t border-mist-400 w-full min-w-0 scroll-mt-24 px-4 py-16 sm:px-6 lg:min-h-[36rem] lg:w-[76vw] lg:-translate-x-4 lg:px-16 lg:py-16">
             {/* Displays the section heading. */}
             <h2 id="movie-picker-title" className="pb-4 text-3xl font-bold text-mist-800 sm:text-4xl">
                 {/* Displays the heading text. */}
