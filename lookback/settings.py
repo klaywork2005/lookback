@@ -96,7 +96,7 @@ DATABASES = {
         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
         "OPTIONS": {
-        "sslmode": os.getenv("POSTGRES_SSLMODE", "prefer"),
+            "sslmode": os.getenv("POSTGRES_SSLMODE", "prefer"),
         },
     }
 }
