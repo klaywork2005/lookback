@@ -27,17 +27,6 @@ const Header = () => {
                 </a>
             {/* Ends the navigation links. */}
             </div>
-            
-            {/* Holds the sign in button. */}
-            <div className=" flex ml-auto mr-2">
-                {/* Displays the sign in button. */}
-                <button className="rounded-lg border border-mist-400 bg-white px-4 py-3 text-lg font-semibold hover:cursor-pointer active:ring-2 active:ring-mist-300 focus:ring-2 focus:ring-mist-400">
-                    {/* Displays the button label. */}
-                    Sign In
-                {/* Ends the sign in button. */}
-                </button>
-            {/* Ends the sign in area. */}
-            </div>
         {/* Ends the header. */}
         </header>
     )

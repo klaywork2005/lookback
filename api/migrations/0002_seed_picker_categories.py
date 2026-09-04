@@ -1,3 +1,4 @@
+# Adds the picker category records.
 from django.db import migrations
 
 

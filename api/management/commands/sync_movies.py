@@ -1,3 +1,5 @@
+# Imports TMDB movies into PostgreSQL.
+from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
@@ -125,21 +127,44 @@ class Command(BaseCommand):
             help="Number of TMDB discovery pages to import.",
         )
         parser.add_argument(
+            "--start-page",
+            type=int,
+            default=1,
+            help="First general discovery page to import.",
+        )
+        parser.add_argument(
             "--category-pages",
             type=int,
             default=0,
             help="Number of discovery pages to import for every picker category.",
         )
+        parser.add_argument(
+            "--new-movies",
+            type=int,
+            default=None,
+            help="Stops after this number of new movies is created.",
+        )
 
     def handle(self, *args, **options):
         page_count = options["pages"]
+        start_page = options["start_page"]
         category_page_count = options["category_pages"]
+        new_movie_limit = options["new_movies"]
 
         if page_count < 0 or page_count > 500:
             raise CommandError("Pages must be between 0 and 500.")
 
+        if start_page < 1 or start_page > 500:
+            raise CommandError("Start page must be between 1 and 500.")
+
+        if page_count > 0 and start_page + page_count - 1 > 500:
+            raise CommandError("The final general discovery page cannot exceed 500.")
+
         if category_page_count < 0 or category_page_count > 20:
             raise CommandError("Category pages must be between 0 and 20.")
+
+        if new_movie_limit is not None and new_movie_limit < 1:
+            raise CommandError("New movies must be greater than 0.")
 
         if page_count == 0 and category_page_count == 0:
             raise CommandError("At least one page must be requested.")
@@ -150,7 +175,7 @@ class Command(BaseCommand):
         seen_tmdb_ids = set()
         discovery_jobs = [
             ("Popular", page_number, {})
-            for page_number in range(1, page_count + 1)
+            for page_number in range(start_page, start_page + page_count)
         ]
 
         for profile_name, filters in get_category_discovery_profiles():
@@ -159,25 +184,57 @@ class Command(BaseCommand):
                 for page_number in range(1, category_page_count + 1)
             )
 
-        for profile_name, page_number, filters in discovery_jobs:
-            discovery = discover_movies(page=page_number, **filters)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            for profile_name, page_number, filters in discovery_jobs:
+                discovery = discover_movies(page=page_number, **filters)
+                movie_ids = []
 
-            for movie_summary in discovery.get("results", []):
-                tmdb_id = movie_summary["id"]
+                for movie_summary in discovery.get("results", []):
+                    tmdb_id = movie_summary["id"]
 
-                if tmdb_id in seen_tmdb_ids:
-                    continue
+                    if tmdb_id in seen_tmdb_ids:
+                        continue
 
-                seen_tmdb_ids.add(tmdb_id)
-                details = get_movie_details(tmdb_id)
-                was_created = self.save_movie(details, genres_by_tmdb_id)
+                    seen_tmdb_ids.add(tmdb_id)
+                    movie_ids.append(tmdb_id)
 
-                if was_created:
-                    created_count += 1
-                else:
-                    updated_count += 1
+                if new_movie_limit is not None:
+                    existing_tmdb_ids = set(
+                        Movie.objects.filter(tmdb_id__in=movie_ids).values_list(
+                            "tmdb_id",
+                            flat=True,
+                        )
+                    )
+                    movie_ids = [
+                        tmdb_id
+                        for tmdb_id in movie_ids
+                        if tmdb_id not in existing_tmdb_ids
+                    ]
+                    remaining_count = new_movie_limit - created_count
+                    movie_ids = movie_ids[:remaining_count]
 
-            self.stdout.write(f"Imported {profile_name} page {page_number}.")
+                for details in executor.map(get_movie_details, movie_ids):
+                    was_created = self.save_movie(details, genres_by_tmdb_id)
+
+                    if was_created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+
+                self.stdout.write(f"Imported {profile_name} page {page_number}.")
+
+                if (
+                    new_movie_limit is not None
+                    and created_count >= new_movie_limit
+                ):
+                    break
+
+        if new_movie_limit is not None and created_count < new_movie_limit:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Requested {new_movie_limit} new movies but created {created_count}."
+                )
+            )
 
         self.stdout.write(
             self.style.SUCCESS(

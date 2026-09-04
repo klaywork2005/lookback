@@ -1,3 +1,4 @@
+# Runs Django management commands.
 import os
 import sys
 

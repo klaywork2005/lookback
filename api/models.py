@@ -1,3 +1,4 @@
+# Defines movie data and category filters.
 # Enables deferred type annotations.
 from __future__ import annotations
 

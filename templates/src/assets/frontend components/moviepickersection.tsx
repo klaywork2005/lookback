@@ -4,18 +4,71 @@ import { useState } from 'react'
 // Defines the available picker steps.
 type PickerStep = 'genres' | 'categories' | 'movie'
 
-// Stores the temporary movie result.
-const placeholderMovie = {
+// Defines one movie returned by Django.
+type MovieResult = {
+    // Stores the TMDB identifier.
+    tmdb_id: number
     // Stores the movie title.
-    title: 'Echoes Beyond Orion',
-    // Stores the release year.
-    year: 2026,
-    // Stores the movie runtime.
-    runtime: '1h 52m',
-    // Stores the movie rating.
-    rating: '6.7',
+    title: string
     // Stores the movie summary.
-    overview: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    overview: string
+    // Stores the release date.
+    release_date: string | null
+    // Stores the runtime in minutes.
+    runtime_minutes: number | null
+    // Stores the production budget.
+    budget: number | null
+    // Stores the reported revenue.
+    revenue: number | null
+    // Stores the movie rating.
+    vote_average: number | null
+    // Stores the poster URL.
+    poster_url: string | null
+    // Stores the movie genres.
+    genres: string[]
+}
+
+// Defines a successful movie response.
+type MoviePickResponse = {
+    // Stores the selected movie.
+    movie: MovieResult
+    // Stores the number of matching movies.
+    match_count: number
+}
+
+// Formats a movie runtime.
+const formatRuntime = (runtimeMinutes: number | null) => {
+    // Handles a missing runtime.
+    if (runtimeMinutes === null) {
+        // Returns the missing runtime label.
+        return 'Unknown runtime'
+    }
+
+    // Stores the complete hours.
+    const hours = Math.floor(runtimeMinutes / 60)
+    // Stores the remaining minutes.
+    const minutes = runtimeMinutes % 60
+    // Returns the formatted runtime.
+    return `${hours}h ${minutes}m`
+}
+
+// Formats a movie money value.
+const formatMoney = (amount: number | null) => {
+    // Handles a missing money value.
+    if (amount === null) {
+        // Returns the missing money label.
+        return 'Not reported'
+    }
+
+    // Returns the dollar value.
+    return new Intl.NumberFormat('en-US', {
+        // Uses United States currency formatting.
+        style: 'currency',
+        // Selects United States dollars.
+        currency: 'USD',
+        // Removes decimal places.
+        maximumFractionDigits: 0,
+    }).format(amount)
 }
 
 // Builds the selection button classes.
@@ -43,6 +96,18 @@ const MoviePickerSection = () => {
 
     // Stores the selected categories.
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(() => new Set())
+
+    // Stores the selected movie result.
+    const [selectedMovie, setSelectedMovie] = useState<MovieResult | null>(null)
+
+    // Stores the number of matching movies.
+    const [matchCount, setMatchCount] = useState(0)
+
+    // Stores the request loading state.
+    const [isLoadingMovie, setIsLoadingMovie] = useState(false)
+
+    // Stores the request error message.
+    const [movieError, setMovieError] = useState<string | null>(null)
 
     // Toggles one genre.
     const toggleGenre = (genre: string) => {
@@ -108,10 +173,61 @@ const MoviePickerSection = () => {
     // Ends the category clear action.
     }
 
-    // Opens the movie result step.
-    const showMovie = () => {
+    // Requests and opens a movie result.
+    const showMovie = async () => {
         // Sets the current step to the movie result.
         setCurrentStep('movie')
+        // Starts the request loading state.
+        setIsLoadingMovie(true)
+        // Clears the previous request error.
+        setMovieError(null)
+
+        // Attempts to retrieve a movie.
+        try {
+            // Sends the selected filters to Django.
+            const response = await fetch('/api/movies/pick/', {
+                // Uses the endpoint request method.
+                method: 'POST',
+                // Describes the request body.
+                headers: {
+                    // Sets the JSON content type.
+                    'Content-Type': 'application/json',
+                },
+                // Creates the request body.
+                body: JSON.stringify({
+                    // Sends every selected genre.
+                    genres: Array.from(selectedGenres),
+                    // Sends every selected category.
+                    categories: Array.from(selectedCategories),
+                }),
+            })
+
+            // Reads the JSON response.
+            const responseData = await response.json() as Partial<MoviePickResponse> & { error?: string }
+
+            // Checks for an unsuccessful response.
+            if (!response.ok || responseData.movie === undefined) {
+                // Reports the response error.
+                throw new Error(responseData.error ?? 'Unable to find a matching movie.')
+            }
+
+            // Stores the returned movie.
+            setSelectedMovie(responseData.movie)
+            // Stores the returned match count.
+            setMatchCount(responseData.match_count ?? 0)
+        // Handles a failed request.
+        } catch (error) {
+            // Clears the previous movie result.
+            setSelectedMovie(null)
+            // Clears the previous match count.
+            setMatchCount(0)
+            // Stores a readable error message.
+            setMovieError(error instanceof Error ? error.message : 'Unable to find a matching movie.')
+        // Finishes the request.
+        } finally {
+            // Ends the request loading state.
+            setIsLoadingMovie(false)
+        }
     // Ends the movie action.
     }
 
@@ -129,15 +245,18 @@ const MoviePickerSection = () => {
     // Ends the back action.
     }
 
-    const getAnotherMovie = () => {
-        Math.random 
-    }
     // Starts the picker again.
     const startOver = () => {
         // Clears the selected genres.
         setSelectedGenres(new Set())
         // Clears the selected categories.
         setSelectedCategories(new Set())
+        // Clears the selected movie.
+        setSelectedMovie(null)
+        // Clears the match count.
+        setMatchCount(0)
+        // Clears the request error.
+        setMovieError(null)
         // Opens the genre step.
         setCurrentStep('genres')
     // Ends the restart action.
@@ -452,64 +571,114 @@ const MoviePickerSection = () => {
                 {/* Ends the result heading. */}
                 </h3>
 
-                {/* Holds the movie card. */}
-                <article className="mx-auto mt-8 grid max-w-4xl overflow-hidden rounded-lg border border-mist-400 bg-white shadow-md md:grid-cols-[minmax(12rem,18rem)_1fr]">
-                    {/* Holds the poster placeholder. */}
-                    <div className="flex min-h-80 items-center justify-center bg-neutral-200 p-6 text-center text-xl font-semibold text-mist-700 md:min-h-112">
-                        {/* Displays the poster placeholder label. */}
-                        Movie Poster
-                    {/* Ends the poster placeholder. */}
+                {/* Displays the loading state. */}
+                {isLoadingMovie && (
+                    // Holds the loading message.
+                    <div role="status" className="mx-auto mt-8 max-w-4xl rounded-lg border border-mist-400 bg-white p-10 text-center shadow-md">
+                        {/* Displays the loading heading. */}
+                        <p className="text-2xl font-semibold text-mist-800">Finding your movie...</p>
+                        {/* Displays the loading detail. */}
+                        <p className="mt-3 text-lg text-mist-700">Checking every selected genre and category.</p>
+                    {/* Ends the loading message. */}
                     </div>
+                )}
 
-                    {/* Holds the movie information. */}
-                    <div className="flex flex-col justify-center p-6 sm:p-8">
-                        {/* Identifies the temporary result. */}
-                        <p className="text-sm font-semibold tracking-widest text-mist-600 uppercase">
-                            {/* Displays the temporary result label. */}
-                            Your Movie
-                        {/* Ends the temporary result label. */}
-                        </p>
-
-                        {/* Displays the movie title. */}
-                        <h3 className="mt-2 text-3xl font-bold text-mist-800 sm:text-4xl">
-                            {/* Displays the title text. */}
-                            {placeholderMovie.title}
-                        {/* Ends the movie title. */}
-                        </h3>
-
-                        {/* Holds the movie details. */}
-                        <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-mist-700">
-                            {/* Displays the release year. */}
-                            <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">{placeholderMovie.year}</span>
-                            {/* Displays the runtime. */}
-                            <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">{placeholderMovie.runtime}</span>
-                            {/* Displays the rating. */}
-                            <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">Rating {placeholderMovie.rating}</span>
-                        {/* Ends the movie details. */}
-                        </div>
-
-                        {/* Displays the movie overview. */}
-                        <p className="mt-6 text-lg leading-8 text-mist-700">
-                            {/* Displays the overview text. */}
-                            {placeholderMovie.overview}
-                        {/* Ends the movie overview. */}
-                        </p>
-
-                        {/* Holds the applied filters. */}
-                        <div className="mt-6 rounded-lg border border-mist-300 bg-neutral-100 p-4 text-mist-700">
-                            {/* Displays the selected genres. */}
-                            <p><span className="font-semibold">Applied Genres:</span> {genreSummary}</p>
-                            {/* Displays the selected categories. */}
-                            <p className="mt-2"><span className="font-semibold">Applied Categories:</span> {categorySummary}</p>
-                        {/* Ends the applied filters. */}
-                        </div>
-                    {/* Ends the movie information. */}
+                {/* Displays the request error. */}
+                {!isLoadingMovie && movieError !== null && (
+                    // Holds the request error.
+                    <div role="alert" className="mx-auto mt-8 max-w-4xl rounded-lg border border-red-400 bg-white p-10 text-center shadow-md">
+                        {/* Displays the error heading. */}
+                        <p className="text-2xl font-semibold text-mist-800">No movie was selected</p>
+                        {/* Displays the error detail. */}
+                        <p className="mt-3 text-lg text-mist-700">{movieError}</p>
+                    {/* Ends the request error. */}
                     </div>
-                {/* Ends the movie card. */}
-                </article>
+                )}
+
+                {/* Displays the selected movie. */}
+                {!isLoadingMovie && selectedMovie !== null && (
+                    // Holds the movie card.
+                    <article className="mx-auto mt-8 grid max-w-4xl overflow-hidden rounded-lg border border-mist-400 bg-white shadow-md md:grid-cols-[minmax(12rem,18rem)_1fr]">
+                        {/* Checks for a movie poster. */}
+                        {selectedMovie.poster_url !== null ? (
+                            // Displays the movie poster.
+                            <img className="min-h-80 h-full w-full bg-neutral-200 object-cover md:min-h-112" src={selectedMovie.poster_url} alt={`${selectedMovie.title} poster`} />
+                        // Handles a missing movie poster.
+                        ) : (
+                            // Holds the poster fallback.
+                            <div className="flex min-h-80 items-center justify-center bg-neutral-200 p-6 text-center text-xl font-semibold text-mist-700 md:min-h-112">
+                                {/* Displays the poster fallback label. */}
+                                Poster unavailable
+                            {/* Ends the poster fallback. */}
+                            </div>
+                        )}
+
+                        {/* Holds the movie information. */}
+                        <div className="flex flex-col justify-center p-6 sm:p-8">
+                            {/* Identifies the selected result. */}
+                            <p className="text-sm font-semibold tracking-widest text-mist-600 uppercase">
+                                {/* Displays the selected result label. */}
+                                Your Movie
+                            {/* Ends the selected result label. */}
+                            </p>
+
+                            {/* Displays the movie title. */}
+                            <h3 className="mt-2 text-3xl font-bold text-mist-800 sm:text-4xl">
+                                {/* Displays the title text. */}
+                                {selectedMovie.title}
+                            {/* Ends the movie title. */}
+                            </h3>
+
+                            {/* Holds the movie details. */}
+                            <div className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-mist-700">
+                                {/* Displays the release year. */}
+                                <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">{selectedMovie.release_date?.slice(0, 4) ?? 'Unknown year'}</span>
+                                {/* Displays the runtime. */}
+                                <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">{formatRuntime(selectedMovie.runtime_minutes)}</span>
+                                {/* Displays the rating. */}
+                                <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">Rating {selectedMovie.vote_average?.toFixed(1) ?? 'Not rated'}</span>
+                                {/* Displays the budget. */}
+                                <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">Budget {formatMoney(selectedMovie.budget)}</span>
+                                {/* Displays the revenue. */}
+                                <span className="rounded-lg border border-mist-400 bg-white px-4 py-2">Revenue {formatMoney(selectedMovie.revenue)}</span>
+                            {/* Ends the movie details. */}
+                            </div>
+
+                            {/* Displays the movie genres. */}
+                            <p className="mt-4 text-sm font-semibold text-mist-600">{selectedMovie.genres.join(', ')}</p>
+
+                            {/* Displays the movie overview. */}
+                            <p className="mt-6 text-lg leading-8 text-mist-700">
+                                {/* Displays the overview text. */}
+                                {selectedMovie.overview || 'No overview is available for this movie.'}
+                            {/* Ends the movie overview. */}
+                            </p>
+
+                            {/* Holds the applied filters. */}
+                            <div className="mt-6 rounded-lg border border-mist-300 bg-neutral-100 p-4 text-mist-700">
+                                {/* Displays the selected genres. */}
+                                <p><span className="font-semibold">Applied Genres:</span> {genreSummary}</p>
+                                {/* Displays the selected categories. */}
+                                <p className="mt-2"><span className="font-semibold">Applied Categories:</span> {categorySummary}</p>
+                                {/* Displays the match count. */}
+                                <p className="mt-2"><span className="font-semibold">Matching Movies:</span> {matchCount}</p>
+                            {/* Ends the applied filters. */}
+                            </div>
+                        {/* Ends the movie information. */}
+                        </div>
+                    {/* Ends the movie card. */}
+                    </article>
+                )}
 
                 {/* Holds the movie controls. */}
                 <div className="flex flex-wrap items-center justify-center gap-4">
+                    {/* Requests another movie. */}
+                    <button type="button" onClick={showMovie} disabled={isLoadingMovie} className="mt-6 h-14 max-h-16 min-h-12 w-full max-w-40 min-w-0 rounded-lg border border-mist-900 bg-mist-500 px-4 py-3 text-center text-base font-semibold text-white transition duration-150 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
+                        {/* Displays the request label. */}
+                        {isLoadingMovie ? 'Finding Movie' : selectedMovie === null ? 'Try Again' : 'Another Movie'}
+                    {/* Ends the request button. */}
+                    </button>
+
                     {/* Opens the category step. */}
                     <button type="button" onClick={showCategories} className="mt-6 h-14 max-h-16 min-h-12 w-full max-w-32 min-w-0 rounded-lg border border-mist-900 bg-mist-500 px-4 py-3 text-center text-base font-semibold text-white transition duration-150 hover:-translate-y-0.5 active:border-2 sm:text-lg">
                         {/* Displays the Back label. */}

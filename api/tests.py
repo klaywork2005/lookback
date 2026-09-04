@@ -1,8 +1,11 @@
+# Tests API routes and movie filters.
+import json
+
 # Imports Django test classes.
 from django.test import SimpleTestCase, TestCase
 
 # Imports movie filtering tools.
-from .models import Movie, date_months_ago
+from .models import Genre, Movie, date_months_ago
 
 
 class HealthViewTests(SimpleTestCase):
@@ -11,6 +14,89 @@ class HealthViewTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+
+class MoviePickerViewTests(TestCase):
+    def setUp(self):
+        self.action = Genre.objects.create(
+            tmdb_id=28,
+            name="Action",
+            slug="action",
+        )
+        self.comedy = Genre.objects.create(
+            tmdb_id=35,
+            name="Comedy",
+            slug="comedy",
+        )
+
+        self.matching_movie = Movie.objects.create(
+            tmdb_id=100,
+            title="Matching Movie",
+            runtime_minutes=90,
+            vote_average=7.5,
+            vote_count=500,
+            adult=False,
+        )
+        self.matching_movie.genres.set([self.action, self.comedy])
+
+        other_movie = Movie.objects.create(
+            tmdb_id=101,
+            title="Other Movie",
+            runtime_minutes=120,
+            vote_average=6.5,
+            vote_count=50,
+            adult=False,
+        )
+        other_movie.genres.set([self.action])
+
+    def post_json(self, payload):
+        return self.client.post(
+            "/api/movies/pick/",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+    def test_pick_movie_applies_every_selected_filter(self):
+        response = self.post_json(
+            {
+                "genres": ["Action", "Comedy"],
+                "categories": ["Short and Sweet"],
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["match_count"], 1)
+        self.assertEqual(response.json()["movie"]["tmdb_id"], 100)
+
+    def test_pick_movie_rejects_unknown_filters(self):
+        response = self.post_json(
+            {
+                "genres": ["Unknown Genre"],
+                "categories": [],
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["unknown_genres"], ["Unknown Genre"])
+
+    def test_pick_movie_reports_no_matches(self):
+        response = self.post_json(
+            {
+                "genres": ["Comedy"],
+                "categories": ["Epic Runtime"],
+            }
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_pick_movie_requires_valid_json(self):
+        response = self.client.post(
+            "/api/movies/pick/",
+            data="not json",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
 
 
 # Tests every movie category filter.

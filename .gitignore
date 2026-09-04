@@ -1,7 +1,12 @@
+# Ignores local secrets.
 .env
+
+# Ignores Python environments and cache files.
 .venv/
 db.sqlite3
 **/__pycache__/
 *.py[cod]
-frontend/node_modules/
-frontend/dist/
+
+# Ignores frontend dependencies and builds.
+templates/node_modules/
+templates/dist/

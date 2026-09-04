@@ -1,3 +1,4 @@
+# Configures the Django project.
 import os
 from pathlib import Path
 
@@ -24,7 +25,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "api",
-    "base.apps.BaseConfig",
 ]
 
 MIDDLEWARE = [
@@ -43,7 +43,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            BASE_DIR / 'templates'
+            BASE_DIR / "frontend_dist"
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -55,6 +55,14 @@ TEMPLATES = [
         },
     },
 ]
+
+STATIC_URL = "/static/"
+
+STATICFILES_DIRS = [
+    ("frontend", BASE_DIR / "frontend_dist"),
+]
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 WSGI_APPLICATION = "lookback.wsgi.application"
 
@@ -80,7 +88,5 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
-
-STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

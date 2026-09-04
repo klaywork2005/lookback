@@ -1,3 +1,4 @@
+# Configures the API application.
 from django.apps import AppConfig
 
 
