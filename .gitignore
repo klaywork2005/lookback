@@ -10,3 +10,4 @@ db.sqlite3
 # Ignores frontend dependencies and builds.
 templates/node_modules/
 templates/dist/
+staticfiles/

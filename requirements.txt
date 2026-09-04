@@ -4,3 +4,5 @@ psycopg[binary]>=3.2,<4
 python-dotenv>=1.1,<2
 requests>=2.32,<3
 tmdbsimple>=2.9,<3
+gunicorn>=26,<27
+whitenoise>=6.12,<7

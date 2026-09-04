@@ -16,6 +16,18 @@ ALLOWED_HOSTS = [
     for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if host.strip()
 ]
+AZURE_HOSTNAME = os.getenv("WEBSITE_HOSTNAME")
+if AZURE_HOSTNAME:
+    ALLOWED_HOSTS.append(AZURE_HOSTNAME)
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+if AZURE_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{AZURE_HOSTNAME}")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -29,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -63,6 +76,14 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 WSGI_APPLICATION = "lookback.wsgi.application"
 
@@ -74,6 +95,9 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.environ["POSTGRES_PASSWORD"]),
         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "OPTIONS": {
+        "sslmode": os.getenv("POSTGRES_SSLMODE", "prefer"),
+        },
     }
 }
 
@@ -90,3 +114,8 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
