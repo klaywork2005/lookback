@@ -34,6 +34,16 @@ jobs:
           az rest --method get --url "https://management.azure.com${app_id}/usages?api-version=2024-11-01" --query 'value[].{name:name.localizedValue,currentValue:currentValue,limit:limit,unit:unit,nextResetTime:nextResetTime}' -o json
           az monitor activity-log list --resource-id "$app_id" --offset 7d --max-events 30 --query '[].{time:eventTimestamp,operation:operationName.localizedValue,status:status.localizedValue,subStatus:subStatus.localizedValue}' -o json || echo "Activity log is unavailable to this identity."
 
+      - name: Inspect quota diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_id=$(az webapp list --query "[?name=='lookback-web'].id | [0]" -o tsv)
+          az webapp show --ids "$app_id" --query '{state:state,sku:sku,kind:kind}' -o json
+          az webapp config show --ids "$app_id" --query '{linuxFxVersion:linuxFxVersion,alwaysOn:alwaysOn,limits:limits,numberOfWorkers:numberOfWorkers}' -o json
+          az monitor metrics list --resource "$app_id" --metric CpuTime --interval PT1H --aggregation Total --offset 24h --query 'value[].{name:name.localizedValue,timeseries:timeseries[].data}' -o json || echo "CPU metrics are unavailable."
+          az rest --method get --url "https://management.azure.com${app_id}/detectors?api-version=2024-11-01" --query 'value[].{id:name,name:properties.metadata.name}' -o json || echo "Diagnostic detectors are unavailable."
+
       - name: Start stopped app
         shell: bash
         run: |
