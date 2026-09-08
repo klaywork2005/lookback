@@ -1,0 +1,48 @@
+name: Diagnose Azure app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_176AB235CF974296A5481D3A1FE4A7A2 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DEF49D1D94B346EE8F7C6E3A13454FA2 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7561C1C03FB4429C9EEB0B810BE28993 }}
+
+      - name: Inspect app and quotas
+        shell: bash
+        run: |
+          set -euo pipefail
+          az account show --query '{state:state}' -o json
+          app_id=$(az webapp list --query "[?name=='lookback-web'].id | [0]" -o tsv)
+          if [[ -z "$app_id" ]]; then
+            echo "App was not found in the current subscription."
+            exit 1
+          fi
+          az webapp show --ids "$app_id" --query '{state:state,enabled:enabled,availabilityState:availabilityState,usageState:usageState,defaultHostName:defaultHostName}' -o json
+          plan_id=$(az webapp show --ids "$app_id" --query serverFarmId -o tsv)
+          az appservice plan show --ids "$plan_id" --query '{status:status,sku:sku}' -o json
+          az rest --method get --url "https://management.azure.com${app_id}/usages?api-version=2024-11-01" --query 'value[].{name:name.localizedValue,currentValue:currentValue,limit:limit,unit:unit,nextResetTime:nextResetTime}' -o json
+          az monitor activity-log list --resource-id "$app_id" --offset 7d --max-events 30 --query '[].{time:eventTimestamp,operation:operationName.localizedValue,status:status.localizedValue,subStatus:subStatus.localizedValue}' -o json
+
+      - name: Start stopped app
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_id=$(az webapp list --query "[?name=='lookback-web'].id | [0]" -o tsv)
+          state=$(az webapp show --ids "$app_id" --query state -o tsv)
+          if [[ "$state" == "Stopped" ]]; then
+            az webapp start --ids "$app_id"
+            az webapp show --ids "$app_id" --query '{state:state,enabled:enabled}' -o json
+          else
+            echo "App state: $state"
+          fi
