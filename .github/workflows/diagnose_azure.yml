@@ -42,9 +42,9 @@ jobs:
           az webapp show --ids "$app_id" --query '{state:state,sku:sku,kind:kind}' -o json
           az webapp config show --ids "$app_id" --query '{linuxFxVersion:linuxFxVersion,alwaysOn:alwaysOn,limits:limits,numberOfWorkers:numberOfWorkers}' -o json
           az monitor metrics list --resource "$app_id" --metric CpuTime --interval PT1H --aggregation Total --offset 24h --query 'value[].{name:name.localizedValue,timeseries:timeseries[].data}' -o json || echo "CPU metrics are unavailable."
-          az rest --method get --url "https://management.azure.com${app_id}/detectors?api-version=2024-11-01" --query 'value[].{id:name,name:properties.metadata.name}' -o json || echo "Diagnostic detectors are unavailable."
+          az rest --method get --url "https://management.azure.com${app_id}/detectors/LinuxAppDown?api-version=2024-11-01" --query 'properties.dataset[].table' -o json || echo "Availability diagnostics are unavailable."
 
-      - name: Start stopped app
+      - name: Recover app and verify health
         shell: bash
         run: |
           set -euo pipefail
@@ -52,7 +52,11 @@ jobs:
           state=$(az webapp show --ids "$app_id" --query state -o tsv)
           if [[ "$state" == "Stopped" ]]; then
             az webapp start --ids "$app_id"
-            az webapp show --ids "$app_id" --query '{state:state,enabled:enabled}' -o json
+          elif [[ "$state" == "QuotaExceeded" ]]; then
+            az webapp restart --ids "$app_id"
           else
             echo "App state: $state"
           fi
+          az webapp show --ids "$app_id" --query '{state:state,enabled:enabled,usageState:usageState}' -o json
+          hostname=$(az webapp show --ids "$app_id" --query defaultHostName -o tsv)
+          curl --fail --silent --show-error --retry 3 --retry-all-errors --retry-delay 15 --max-time 30 "https://${hostname}/api/health/"
