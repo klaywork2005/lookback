@@ -39,13 +39,27 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+
+      - name: Package application
+        run: |
+          zip -r release.zip . \
+            -x '.git/*' \
+            -x '.github/*' \
+            -x '.venv/*' \
+            -x '.vscode/*' \
+            -x '*/__pycache__/*' \
+            -x '__pycache__/*' \
+            -x 'templates/node_modules/*' \
+            -x '.env' \
+            -x 'release.zip'
+
       - name: Upload application
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            .
-            !templates/node_modules/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -72,3 +86,10 @@ jobs:
         with:
           app-name: lookback-web
           slot-name: Production
+          package: release.zip
+
+      - name: Report deployment log on failure
+        if: failure()
+        run: |
+          echo "Fetch the real Kudu error with:"
+          echo "az webapp log deployment show --name lookback-web --resource-group <your-rg>"

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-TMDB_ACCESS_TOKEN = os.environ["TMDB_ACCESS_TOKEN"]
+TMDB_ACCESS_TOKEN = os.getenv("TMDB_ACCESS_TOKEN", "")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-development-only")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
@@ -92,7 +92,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_DB", "lookback"),
         "USER": os.getenv("POSTGRES_USER", "lookback"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", os.environ["POSTGRES_PASSWORD"]),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
         "OPTIONS": {
