@@ -30,9 +30,9 @@ jobs:
           fi
           az webapp show --ids "$app_id" --query '{state:state,enabled:enabled,availabilityState:availabilityState,usageState:usageState,defaultHostName:defaultHostName}' -o json
           plan_id=$(az webapp show --ids "$app_id" --query serverFarmId -o tsv)
-          az appservice plan show --ids "$plan_id" --query '{status:status,sku:sku}' -o json
+          az appservice plan show --ids "$plan_id" --query '{status:status,sku:sku}' -o json || echo "Hosting plan details are unavailable to this identity."
           az rest --method get --url "https://management.azure.com${app_id}/usages?api-version=2024-11-01" --query 'value[].{name:name.localizedValue,currentValue:currentValue,limit:limit,unit:unit,nextResetTime:nextResetTime}' -o json
-          az monitor activity-log list --resource-id "$app_id" --offset 7d --max-events 30 --query '[].{time:eventTimestamp,operation:operationName.localizedValue,status:status.localizedValue,subStatus:subStatus.localizedValue}' -o json
+          az monitor activity-log list --resource-id "$app_id" --offset 7d --max-events 30 --query '[].{time:eventTimestamp,operation:operationName.localizedValue,status:status.localizedValue,subStatus:subStatus.localizedValue}' -o json || echo "Activity log is unavailable to this identity."
 
       - name: Start stopped app
         shell: bash
