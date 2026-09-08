@@ -67,6 +67,16 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DEF49D1D94B346EE8F7C6E3A13454FA2 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7561C1C03FB4429C9EEB0B810BE28993 }}
 
+      - name: Ensure App Service is running
+        run: |
+          APP_ID=$(az webapp list --query "[?name=='lookback-web'].id | [0]" -o tsv)
+          if [ -z "$APP_ID" ]; then
+            echo "Unable to find Azure Web App 'lookback-web' in the current subscription."
+            exit 1
+          fi
+
+          az webapp start --ids "$APP_ID"
+
       - name: Deploy application
         uses: azure/webapps-deploy@v3
         with:
