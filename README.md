@@ -100,6 +100,30 @@ The picker accepts a JSON object through `POST`.
 
 Every selected genre and category must match. A successful response contains one movie and the total match count.
 
+## Movie discovery map
+
+The discovery map appears below the movie picker. Choose **Explore a surprise pick**
+to start independently, or **Explore similar** on a picker result. Select a poster
+or one of the movie buttons to read its synopsis and connection reasons. Choose
+**Explore from this movie** to make it the center; the exploration trail lets you
+return to an earlier movie.
+
+The read-only endpoint `GET /api/movies/discover/` returns a seed movie and up to
+six recommendations. Pass `?tmdb_id=123` to explore a specific stored TMDB movie;
+without an identifier it chooses among the fifty movies with the most votes that
+have genres. Adult titles are excluded.
+
+Every recommendation shares a genre with the seed. Ranking happens in the database
+before applying the six-result limit. The score awards up to 70 points for genre
+intersection divided by genre union, 15 points for runtimes within 20 minutes,
+and 15 points for release years within five years. Missing metadata earns no
+bonus. Ties use vote count, then TMDB identifier, for stable ordering.
+
+The feature uses the existing stored catalogue and needs no schema migration,
+new credentials, or live TMDB requests. The graph library loads only when a map
+is opened. Keyboard users can select all movies through the buttons beneath it;
+mobile layouts stack the graph and detail panel.
+
 ## Checks
 
 ```powershell

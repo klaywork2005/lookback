@@ -5,9 +5,10 @@ import random
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .models import Genre, Movie, PickerCategory
+from .services.discovery import related_movies
 
 
 def health(request):
@@ -108,8 +109,43 @@ def serialize_movie(movie):
         "backdrop_url": backdrop_url,
         "original_language": movie.original_language,
         "adult": movie.adult,
-        "genres": list(movie.genres.values_list("name", flat=True)),
+        "genres": [genre.name for genre in movie.genres.all()],
     }
+
+
+@require_GET
+def discover_movies(request):
+    """Return a movie and six explainable recommendations from stored data."""
+    requested_id = request.GET.get("tmdb_id")
+    movies = Movie.objects.filter(adult=False).prefetch_related("genres")
+    if requested_id is not None:
+        if (
+            not requested_id.isascii() or not requested_id.isdecimal()
+            or len(requested_id) > 18 or int(requested_id) == 0
+        ):
+            return JsonResponse({"error": "tmdb_id must be a positive movie identifier."}, status=400)
+        seed = movies.filter(tmdb_id=int(requested_id)).first()
+        if seed is None:
+            return JsonResponse({"error": "This movie is not available in the catalogue."}, status=404)
+    else:
+        # Start from a familiar movie; keep the random selection bounded.
+        seed_ids = list(
+            movies.exclude(genres=None).order_by("-vote_count", "tmdb_id")
+            .values_list("tmdb_id", flat=True).distinct()[:50]
+        )
+        if not seed_ids:
+            return JsonResponse({"error": "No movies are available to explore yet."}, status=404)
+        seed = movies.get(tmdb_id=random.choice(seed_ids))
+
+    recommendations = []
+    for movie, score, shared_genres, reasons in related_movies(seed):
+        recommendations.append({
+            "movie": serialize_movie(movie),
+            "score": score,
+            "shared_genres": shared_genres,
+            "reasons": reasons,
+        })
+    return JsonResponse({"seed": serialize_movie(seed), "recommendations": recommendations})
 
 
 @csrf_exempt

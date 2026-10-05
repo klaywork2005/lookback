@@ -1,5 +1,6 @@
 # Tests API routes and movie filters.
 import json
+from datetime import date
 
 # Imports Django test classes.
 from django.test import SimpleTestCase, TestCase
@@ -14,6 +15,98 @@ class HealthViewTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+
+class MovieDiscoveryViewTests(TestCase):
+    def setUp(self):
+        self.action = Genre.objects.create(tmdb_id=28, name="Action", slug="action")
+        self.scifi = Genre.objects.create(tmdb_id=878, name="Science Fiction", slug="science-fiction")
+        self.comedy = Genre.objects.create(tmdb_id=35, name="Comedy", slug="comedy")
+        self.seed = self.create_movie(100, "Starting Movie", [self.action, self.scifi])
+
+    def create_movie(self, tmdb_id, title, genres, **overrides):
+        values = {"runtime_minutes": 120, "release_date": date(2010, 6, 1), "vote_count": 100}
+        values.update(overrides)
+        movie = Movie.objects.create(tmdb_id=tmdb_id, title=title, **values)
+        movie.genres.set(genres)
+        return movie
+
+    def discover(self, tmdb_id=100):
+        return self.client.get("/api/movies/discover/", {"tmdb_id": tmdb_id})
+
+    def test_ranking_explains_similarity_and_excludes_unrelated_and_adult_movies(self):
+        self.create_movie(101, "Same Genres", [self.action, self.scifi])
+        self.create_movie(102, "Partial Match", [self.action])
+        self.create_movie(103, "Broader Genres", [self.action, self.scifi, self.comedy])
+        self.create_movie(104, "Adult Movie", [self.action, self.scifi], adult=True)
+        self.create_movie(105, "Unrelated Movie", [self.comedy])
+
+        response = self.discover()
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["seed"]["tmdb_id"], 100)
+        matches = data["recommendations"]
+        self.assertEqual([match["movie"]["tmdb_id"] for match in matches], [101, 103, 102])
+        self.assertEqual(matches[0]["score"], 100)
+        self.assertEqual(matches[1]["score"], 76.7)
+        self.assertEqual(matches[2]["score"], 65)
+        self.assertEqual(matches[0]["shared_genres"], ["Action", "Science Fiction"])
+        self.assertEqual(matches[0]["reasons"], [
+            "Shared genres: Action, Science Fiction", "Runtime within 20 minutes",
+            "Released within five years",
+        ])
+
+    def test_missing_metadata_does_not_create_false_reasons_or_bonus_points(self):
+        self.create_movie(101, "Unknown Details", [self.action, self.scifi], runtime_minutes=None, release_date=None)
+        self.create_movie(102, "Zero Runtime", [self.action, self.scifi], runtime_minutes=0, release_date=None)
+        self.seed.runtime_minutes = None
+        self.seed.release_date = None
+        self.seed.save()
+        matches = self.discover().json()["recommendations"]
+        self.assertEqual(len(matches), 2)
+        for match in matches:
+            self.assertEqual(match["score"], 70)
+            self.assertEqual(match["reasons"], ["Shared genres: Action, Science Fiction"])
+
+    def test_runtime_and_release_year_boundaries(self):
+        self.create_movie(101, "At Boundaries", [self.action, self.scifi], runtime_minutes=140, release_date=date(2015, 12, 31))
+        self.create_movie(102, "Outside Boundaries", [self.action, self.scifi], runtime_minutes=141, release_date=date(2016, 1, 1))
+        matches = self.discover().json()["recommendations"]
+        self.assertEqual([match["score"] for match in matches], [100, 70])
+
+    def test_results_are_limited_without_per_movie_queries(self):
+        for index in range(8):
+            self.create_movie(200 + index, f"Related {index}", [self.action, self.scifi])
+        # Seed + genres and ranked recommendations + genres, regardless of result count.
+        with self.assertNumQueries(4):
+            response = self.discover()
+        self.assertEqual(len(response.json()["recommendations"]), 6)
+        self.assertEqual([match["movie"]["tmdb_id"] for match in response.json()["recommendations"]], list(range(200, 206)))
+
+    def test_seed_without_genres_has_an_empty_map(self):
+        self.seed.genres.clear()
+        response = self.discover()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["recommendations"], [])
+
+    def test_invalid_unknown_and_adult_identifiers(self):
+        for invalid in ("abc", "", "-1", "0", "1.5", "1" * 30):
+            with self.subTest(identifier=invalid):
+                self.assertEqual(self.discover(invalid).status_code, 400)
+        self.assertEqual(self.discover(999).status_code, 404)
+        self.seed.adult = True
+        self.seed.save()
+        self.assertEqual(self.discover().status_code, 404)
+
+    def test_surprise_pick_and_empty_catalogue(self):
+        response = self.client.get("/api/movies/discover/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["seed"]["tmdb_id"], self.seed.tmdb_id)
+        Movie.objects.all().delete()
+        self.assertEqual(self.client.get("/api/movies/discover/").status_code, 404)
+
+    def test_discovery_is_read_only(self):
+        self.assertEqual(self.client.post("/api/movies/discover/").status_code, 405)
 
 
 class MoviePickerViewTests(TestCase):

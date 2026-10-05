@@ -87,7 +87,7 @@ const selectionButtonClassName = (isSelected: boolean) => {
 }
 
 // Defines the movie picker.
-const MoviePickerSection = () => {
+const MoviePickerSection = ({ onExploreMovie }: { onExploreMovie: (tmdbId: number) => void }) => {
     // Stores the current picker step.
     const [currentStep, setCurrentStep] = useState<PickerStep>('genres')
 
@@ -672,6 +672,9 @@ const MoviePickerSection = () => {
 
                 {/* Holds the movie controls. */}
                 <div className="flex flex-wrap items-center justify-center gap-4">
+                    {selectedMovie && !isLoadingMovie && <button type="button" onClick={() => onExploreMovie(selectedMovie.tmdb_id)} className="mt-6 min-h-14 rounded-lg border border-mist-800 bg-mist-800 px-5 py-3 text-base font-semibold text-white transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-4">
+                        Explore similar ↓
+                    </button>}
                     {/* Requests another movie. */}
                     <button type="button" onClick={showMovie} disabled={isLoadingMovie} className="mt-6 h-14 max-h-16 min-h-12 w-full max-w-40 min-w-0 rounded-lg border border-mist-900 bg-mist-500 px-4 py-3 text-center text-base font-semibold text-white transition duration-150 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg">
                         {/* Displays the request label. */}
