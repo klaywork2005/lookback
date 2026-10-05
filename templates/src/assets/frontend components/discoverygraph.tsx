@@ -35,23 +35,24 @@ export default function DiscoveryGraph({ map, selectedId, onSelect }: {
       userZoomingEnabled: false,
       boxSelectionEnabled: false,
       autoungrabify: true,
+      // RGB equivalents of the site's Tailwind mist palette for the canvas renderer.
       style: [
         { selector: 'node', style: {
-          width: 66, height: 96, shape: 'round-rectangle', 'background-color': '#253b43',
-          'border-width': 2, 'border-color': '#547078', label: 'data(title)', color: '#d7e4e8',
+          width: 66, height: 96, shape: 'round-rectangle', 'background-color': '#e3e7e8',
+          'border-width': 2, 'border-color': '#9ca8ab', label: 'data(title)', color: '#394447',
           'font-size': 12, 'font-weight': 500, 'text-valign': 'bottom', 'text-margin-y': 9,
-          'text-wrap': 'wrap', 'text-max-width': '110px', 'text-outline-width': 2, 'text-outline-color': '#111e25',
+          'text-wrap': 'wrap', 'text-max-width': '110px', 'text-outline-width': 2, 'text-outline-color': '#f5f5f5',
           'overlay-opacity': 0, 'background-fit': 'cover',
         } },
         { selector: 'node[poster]', style: { 'background-image': 'data(poster)' } },
-        { selector: '.seed', style: { width: 82, height: 120, 'border-color': '#9ee4c6', 'border-width': 3, 'font-weight': 700, color: '#ffffff' } },
-        { selector: '.inspected', style: { 'border-width': 4, 'border-color': '#f3d79c', color: '#f3d79c' } },
+        { selector: '.seed', style: { width: 82, height: 120, 'border-color': '#67787c', 'border-width': 3, 'font-weight': 700, color: '#22292b' } },
+        { selector: '.inspected', style: { 'border-width': 4, 'border-color': '#22292b', color: '#22292b' } },
         { selector: 'edge', style: {
-          width: 1.3, 'line-color': '#476269', 'curve-style': 'straight', label: 'data(label)',
-          'font-size': 9, color: '#91b1b7', 'text-rotation': 'autorotate',
-          'text-background-color': '#111e25', 'text-background-opacity': 1, 'text-background-padding': '4px',
+          width: 1.3, 'line-color': '#9ca8ab', 'curve-style': 'straight', label: 'data(label)',
+          'font-size': 9, color: '#4b585b', 'text-rotation': 'autorotate',
+          'text-background-color': '#f5f5f5', 'text-background-opacity': 1, 'text-background-padding': '4px',
         } },
-        { selector: '.connected', style: { 'line-color': '#9ee4c6', width: 2 } },
+        { selector: '.connected', style: { 'line-color': '#67787c', width: 2 } },
       ],
     })
     graph.current = instance
